@@ -45,7 +45,7 @@ function App() {
                     <div className="collapse navbar-collapse justify-content-between" id="navbarColor01">
                         <ul className="navbar-nav">
                             <li className="nav-item">
-                                <NavLink exact={true} to="/" className="nav-link" activeclassname="active">All Books</NavLink>
+                                <NavLink exact={true} to="/books" className="nav-link" activeclassname="active">All Books</NavLink>
                             </li>
                             {authToken && (
                                 <>
@@ -72,11 +72,11 @@ function App() {
                 </div>
             </nav>
             <Routes>
-                <Route path="/" element={<BooksList setBooks={setBooks} />} /> {/* Pass setBooks function */}
-                <Route path="/add-book" element={<AddBookForm setBooks={setBooks} />} /> {/* Pass setBooks function */}
+                <Route path="/books" element={<BooksList books={books} setBooks={setBooks} />} />
+                <Route path="/add-book" element={<AddBookForm setBooks={setBooks} />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
-                <Route path="/:bookName" element={<BookDetailsPage books={books} />} />
+                <Route path="/books/:bookName" element={<BookDetailsPage books={books} />} />
                 <Route path="/profile" element={<ProfilePage />} />
             </Routes>
         </Router>
@@ -86,7 +86,7 @@ function App() {
 function BookDetailsPage({ books }) {
     const { bookName } = useParams();
     const decodedBookName = decodeURIComponent(bookName);
-    const book = books.find((book) => book.title === decodedBookName);
+    const book = books.find((book) => decodeURIComponent(book.title) === decodedBookName);
 
     if (!book) {
         return <div>Book not found</div>;

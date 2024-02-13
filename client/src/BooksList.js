@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-function BooksList() {
-    const [books, setBooks] = useState([]);
+function BooksList({ books, setBooks }) {
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(6);
     const [totalPages, setTotalPages] = useState(1);
@@ -39,7 +38,7 @@ function BooksList() {
                     <div className="row">
                         {books.map((book, index) => (
                             <div key={index} className="col-md-4 mb-4">
-                                <Link to={`/${encodeURIComponent(book.title)}`} className="text-decoration-none text-dark">
+                                <Link to={`/books/${encodeURIComponent(book.title)}`} className="text-decoration-none text-dark">
                                     <div className="card text-white bg-primary">
                                         <div className="card-header">
                                             <h5 className="card-title">{book.title}</h5>
