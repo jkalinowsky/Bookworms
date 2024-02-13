@@ -30,7 +30,7 @@ function AddBookForm({ setBooks }) {
                         .then(res => res.json())
                         .then(booksData => {
                             setBooks(booksData);
-                            navigate('/');
+                            navigate('/books');
                         })
                         .catch(error => console.error('Error fetching books:', error));
                 }

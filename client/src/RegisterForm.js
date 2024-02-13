@@ -22,8 +22,7 @@ function RegisterForm({ onClose }) {
             })
                 .then(res => {
                     if (res.ok) {
-                        localStorage.setItem('user', 'loggedIn');
-                        navigate('/');
+                        navigate('/books');
                     } else {
                         throw new Error('Register failed');
                     }

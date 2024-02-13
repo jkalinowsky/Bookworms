@@ -30,8 +30,7 @@ function LoginForm() {
             if (authToken) {
                 Cookies.set('authToken', authToken);
             }
-
-            navigate('/');
+            navigate('/books');
         } catch (error) {
             setError(error.message);
         }

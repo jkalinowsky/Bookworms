@@ -1,6 +1,6 @@
 from flask import jsonify, request, send_from_directory, make_response
 from server import app
-from models import Book, User
+from models import Book, User, Review
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -138,4 +138,36 @@ def profile():
         }), 200
     else:
         return jsonify({'error': 'User not found'}), 404
-    
+
+
+@app.route('/books/<string:book_name>/reviews', methods=['POST'])
+@jwt_required()
+def add_review(book_name):
+    user_id = get_jwt_identity()
+    data = request.json
+    rating = data.get('rating')
+    comment = data.get('comment')
+
+    if not rating or not comment:
+        return jsonify({'error': 'Rating and comment are required'}), 400
+
+    book = Book.query.filter_by(title=book_name).first()
+    if not book:
+        return jsonify({'error': 'Book not found'}), 404
+
+    review = Review(rating=rating, comment=comment, user_id=user_id, book_id=book.id)
+    db.session.add(review)
+    db.session.commit()
+
+    return jsonify({'message': 'Review added successfully'}), 201
+
+@app.route('/api/books/<string:book_name>/reviews', methods=['GET'])
+def get_book_reviews(book_name):
+    book = Book.query.filter_by(title=book_name).first()
+    if not book:
+        return jsonify({'error': 'Book not found'}), 404
+
+    reviews = Review.query.filter_by(book_id=book.id).all()
+    reviews_data = [{'id': review.id, 'rating': review.rating, 'comment': review.comment} for review in reviews]
+
+    return jsonify({'reviews': reviews_data}), 200

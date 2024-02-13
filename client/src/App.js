@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import {BrowserRouter as Router, Route, Routes, Link, NavLink, useParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import {BrowserRouter as Router, Route, Routes, NavLink, useParams } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import AddBookForm from './AddBookForm';
 import LoginForm from "./LoginForm";
@@ -9,6 +9,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootswatch/dist/journal/bootstrap.min.css';
 import ProfilePage from "./ProfilePage";
 import BooksList from "./BooksList";
+import ReviewForm from "./ReviewForm"
 
 function App() {
     const [books, setBooks] = useState([]);
@@ -78,6 +79,7 @@ function App() {
                 <Route path="/register" element={<RegisterForm />} />
                 <Route path="/books/:bookName" element={<BookDetailsPage books={books} />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/books/:bookName/write-review" element={<ReviewForm />} />
             </Routes>
         </Router>
     );
