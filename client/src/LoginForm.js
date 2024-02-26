@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
-function LoginForm() {
+function LoginForm({ handleLogin }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -26,11 +26,13 @@ function LoginForm() {
                 throw new Error(errorData.error || 'Login failed');
             }
 
-            const authToken = response.headers.get('Set-Cookie');
+            const authToken = Cookies.get('authToken');
             if (authToken) {
-                Cookies.set('authToken', authToken);
+                handleLogin(authToken);
+                navigate('/books');
+            } else {
+                throw new Error('Authentication token not found');
             }
-            navigate('/books');
         } catch (error) {
             setError(error.message);
         }

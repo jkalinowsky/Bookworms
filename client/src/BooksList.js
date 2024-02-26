@@ -7,6 +7,7 @@ function BooksList({ books, setBooks }) {
     const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
+        localStorage.removeItem('selectedBook');
         fetch(`/books?page=${page}&per_page=${perPage}`)
             .then(res => res.json())
             .then(data => {

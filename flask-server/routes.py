@@ -99,6 +99,7 @@ def register():
     db.session.add(new_user)
     db.session.commit()
 
+
     return jsonify({'message': 'User registered successfully'}), 201
 
 
@@ -140,9 +141,9 @@ def profile():
         return jsonify({'error': 'User not found'}), 404
 
 
-@app.route('/books/<string:book_name>/reviews', methods=['POST'])
+@app.route('/books/<string:book_name>/reviews', methods=['POST', 'PUT'])
 @jwt_required()
-def add_review(book_name):
+def add_or_update_review(book_name):
     user_id = get_jwt_identity()
     data = request.json
     rating = data.get('rating')
@@ -155,19 +156,54 @@ def add_review(book_name):
     if not book:
         return jsonify({'error': 'Book not found'}), 404
 
-    review = Review(rating=rating, comment=comment, user_id=user_id, book_id=book.id)
-    db.session.add(review)
-    db.session.commit()
+    review = Review.query.filter_by(user_id=user_id, book_id=book.id).first()
 
-    return jsonify({'message': 'Review added successfully'}), 201
+    if review:
+        review.rating = rating
+        review.comment = comment
+        db.session.commit()
+        return jsonify({'message': 'Review updated successfully'}), 200
+    else:
+        new_review = Review(rating=rating, comment=comment, user_id=user_id, book_id=book.id)
+        db.session.add(new_review)
+        db.session.commit()
+        return jsonify({'message': 'Review added successfully'}), 201
 
-@app.route('/api/books/<string:book_name>/reviews', methods=['GET'])
+
+@app.route('/books/<string:book_name>/reviews', methods=['GET'])
 def get_book_reviews(book_name):
     book = Book.query.filter_by(title=book_name).first()
     if not book:
         return jsonify({'error': 'Book not found'}), 404
 
     reviews = Review.query.filter_by(book_id=book.id).all()
-    reviews_data = [{'id': review.id, 'rating': review.rating, 'comment': review.comment} for review in reviews]
+    reviews_data = []
 
+    for review in reviews:
+        user = User.query.get(review.user_id)
+        if user:
+            review_data = {
+                'id': review.id,
+                'rating': review.rating,
+                'comment': review.comment,
+                'user_id': review.user_id,
+                'user_nickname': user.username,
+                'book_id': review.book_id,
+                'created_at': review.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            reviews_data.append(review_data)
+
+    return jsonify({'reviews': reviews_data}), 200
+
+
+@app.route('/user/reviews/<string:book_name>', methods=['GET'])
+@jwt_required()
+def get_user_reviews_for_book(book_name):
+    user_id = get_jwt_identity()
+    book = Book.query.filter_by(title=book_name).first()
+    if not book:
+        return jsonify({'message': 'Book not found'}), 404
+
+    reviews = Review.query.filter_by(book_id=book.id, user_id=user_id).all()
+    reviews_data = [{'id': review.id, 'rating': review.rating, 'comment': review.comment} for review in reviews]
     return jsonify({'reviews': reviews_data}), 200

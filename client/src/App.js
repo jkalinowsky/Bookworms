@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {BrowserRouter as Router, Route, Routes, NavLink, useParams } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import AddBookForm from './AddBookForm';
@@ -14,6 +14,14 @@ import ReviewForm from "./ReviewForm"
 function App() {
     const [books, setBooks] = useState([]);
     const [authToken, setAuthToken] = useState(() => Cookies.get('authToken'));
+
+
+    useEffect(() => {
+        const token = Cookies.get('authToken');
+        if (token) {
+            setAuthToken(token);
+        }
+    }, []);
 
     const handleLogout = () => {
         const token = Cookies.get('authToken');
@@ -36,6 +44,10 @@ function App() {
                 }
             })
             .catch(error => console.error('Error logging out:', error));
+    };
+
+    const handleLogin = (token) => {
+        setAuthToken(token);
     };
 
 
@@ -75,7 +87,7 @@ function App() {
             <Routes>
                 <Route path="/books" element={<BooksList books={books} setBooks={setBooks} />} />
                 <Route path="/add-book" element={<AddBookForm setBooks={setBooks} />} />
-                <Route path="/login" element={<LoginForm />} />
+                <Route path="/login" element={<LoginForm handleLogin={handleLogin} />} />
                 <Route path="/register" element={<RegisterForm />} />
                 <Route path="/books/:bookName" element={<BookDetailsPage books={books} />} />
                 <Route path="/profile" element={<ProfilePage />} />
@@ -88,7 +100,16 @@ function App() {
 function BookDetailsPage({ books }) {
     const { bookName } = useParams();
     const decodedBookName = decodeURIComponent(bookName);
-    const book = books.find((book) => decodeURIComponent(book.title) === decodedBookName);
+    let book = books.find(book => decodeURIComponent(book.title) === decodedBookName);
+
+    if (!book) {
+        const storedBook = localStorage.getItem('selectedBook');
+        if (storedBook) {
+            book = JSON.parse(storedBook);
+        }
+    } else {
+        localStorage.setItem('selectedBook', JSON.stringify(book));
+    }
 
     if (!book) {
         return <div>Book not found</div>;

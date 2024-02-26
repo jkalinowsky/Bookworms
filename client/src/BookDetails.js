@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Cookies from "js-cookie";
 
 function BookDetails({ book }) {
     const [reviews, setReviews] = useState([]);
     const [averageRating, setAverageRating] = useState(null);
+    const [authToken, setAuthToken] = useState(() => Cookies.get('authToken'));
+    const [userReviews, setUserReviews] = useState([]);
 
     useEffect(() => {
-        fetch(`/api/books/${encodeURIComponent(book.title)}/reviews`)
+        fetch(`/books/${encodeURIComponent(book.title)}/reviews`)
             .then(response => response.json())
             .then(data => {
                 setReviews(data.reviews);
@@ -15,7 +18,20 @@ function BookDetails({ book }) {
                 setAverageRating(avgRating.toFixed(1));
             })
             .catch(error => console.error('Error fetching reviews:', error));
-    }, [book.title]);
+
+        if (authToken) {
+            fetch(`/user/reviews/${encodeURIComponent(book.title)}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`
+                }
+            })
+                .then(response => response.json())
+                .then(data => setUserReviews(data.reviews))
+                .catch(error => console.error('Error fetching user reviews:', error));
+        }
+    }, [book.title, authToken]);
+
+    const hasReviewed = userReviews.length === 1;
 
     return (
         <div className="container">
@@ -31,29 +47,41 @@ function BookDetails({ book }) {
                     <p className="card-text mx-5">{book.description}</p>
                 </div>
             </div>
-            <Link to={`/books/${encodeURIComponent(book.title)}/write-review`}
-                  className="btn btn-info text-decoration-none text-white w-100"
-                  state={{ bookTitle: book.title }}>
-                Write a review
-            </Link>
+            {authToken && !hasReviewed && (
+                <Link to={`/books/${encodeURIComponent(book.title)}/write-review`}
+                      className="btn btn-info text-decoration-none text-white w-100"
+                      state={{ bookTitle: book.title }}>
+                    Write a review
+                </Link>
+            )}
+            {authToken && hasReviewed && (
+                <Link to={`/books/${encodeURIComponent(book.title)}/write-review`}
+                      className="btn btn-info text-decoration-none text-white w-100"
+                      state={{ bookTitle: book.title }}>
+                    Edit review
+                </Link>
+            )}
 
-            <div className="mt-4">
-                <h3>Reviews:</h3>
-                {reviews.length === 0 ? (
-                    <p>No reviews for this book yet.</p>
-                ) : (
-                    <>
-                        <p>Average Rating: {averageRating}</p>
-                        <ul>
+            <div className="card text-white bg-primary mb-3 mt-4">
+                <div className="card-body p-3">
+                    <h3>Reviews:</h3>
+                    {reviews.length === 0 ? (
+                        <p>No reviews for this book yet.</p>
+                    ) : (
+                        <>
+                            <p>Average Rating: {averageRating}</p>
                             {reviews.map(review => (
-                                <li key={review.id}>
-                                    <p>Rating: {review.rating}</p>
-                                    <p>Comment: {review.comment}</p>
-                                </li>
+                            <div key={review.id} className="card my-2 bg-light">
+                                <div className="card-body">
+                                    <h5>{review.user_nickname} -  {review.rating}/5</h5>
+                                    <p className="mt-3"> {review.comment}</p>
+                                </div>
+                            </div>
                             ))}
-                        </ul>
-                    </>
-                )}
+                        </>
+                    )}
+                </div>
+
             </div>
         </div>
     );
